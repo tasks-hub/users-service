@@ -15,7 +15,7 @@ func NewUserHandler(userService services.UserService) *UserHandlerImpl {
 	return &UserHandlerImpl{userService: userService}
 }
 
-// GetUserByID handles a request to get a user by ID
+// GetUserByID handles a request to retrieve a user by ID
 func (u *UserHandlerImpl) GetUserByID(c *gin.Context) {}
 
 // CreateUser handles a request to create a new user

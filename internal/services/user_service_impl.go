@@ -15,7 +15,7 @@ func NewUserService(userStore store.UserStore) *UserServiceImpl {
 	return &UserServiceImpl{userStore: userStore}
 }
 
-// GetUserByID gets a user by ID
+// GetUserByID retrieves a user by ID
 func (u *UserServiceImpl) GetUserByID(userID int) (*entities.User, error) {
 	return u.userStore.GetUserByID(userID)
 }
