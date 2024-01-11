@@ -1,4 +1,4 @@
-module gihtub.com/fabulias/task-management-backend/users-service
+module gihtub.com/tasks-hub/users-service
 
 go 1.21.6
 
