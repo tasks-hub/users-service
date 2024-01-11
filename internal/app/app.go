@@ -3,8 +3,9 @@ package app
 import (
 	"gihtub.com/tasks-hub/users-service/internal/config"
 	"gihtub.com/tasks-hub/users-service/internal/handlers"
-	"gihtub.com/tasks-hub/users-service/internal/services"
+	"gihtub.com/tasks-hub/users-service/internal/service"
 	"gihtub.com/tasks-hub/users-service/internal/store"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,7 +21,7 @@ func NewServer(cfg config.Config) *App {
 	r.GET("/health", healthHandler.Health)
 
 	userStore := store.NewInMemoryUserStore()
-	userService := services.NewUserService(userStore)
+	userService := service.NewUserService(userStore)
 	userHandler := handlers.NewUserHandler(userService)
 
 	r.POST("/users", userHandler.CreateUser)

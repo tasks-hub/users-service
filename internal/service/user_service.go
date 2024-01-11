@@ -1,4 +1,4 @@
-package services
+package service
 
 import "gihtub.com/tasks-hub/users-service/internal/entities"
 

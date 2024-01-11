@@ -1,17 +1,17 @@
 package handlers
 
 import (
-	"gihtub.com/tasks-hub/users-service/internal/services"
+	service "gihtub.com/tasks-hub/users-service/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
 // UserHandler contains handlers related to users
 type UserHandlerImpl struct {
-	userService services.UserService
+	userService service.UserService
 }
 
 // NewUserHandler creates a UserHandler instance
-func NewUserHandler(userService services.UserService) *UserHandlerImpl {
+func NewUserHandler(userService service.UserService) *UserHandlerImpl {
 	return &UserHandlerImpl{userService: userService}
 }
 
