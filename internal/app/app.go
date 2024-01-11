@@ -1,13 +1,17 @@
 package app
 
 import (
-	"gihtub.com/fabulias/task-management-backend/users-service/internal/config"
-	"gihtub.com/fabulias/task-management-backend/users-service/internal/handlers"
+	"gihtub.com/tasks-hub/users-service/internal/config"
+	"gihtub.com/tasks-hub/users-service/internal/handlers"
+	"gihtub.com/tasks-hub/users-service/internal/service"
+	"gihtub.com/tasks-hub/users-service/internal/store"
+
 	"github.com/gin-gonic/gin"
 )
 
 type App struct {
-	server *gin.Engine
+	server      *gin.Engine
+	userHandler handlers.UserHandler
 }
 
 func NewServer(cfg config.Config) *App {
@@ -16,8 +20,16 @@ func NewServer(cfg config.Config) *App {
 	healthHandler := handlers.NewHealthHandler()
 	r.GET("/health", healthHandler.Health)
 
+	userStore := store.NewInMemoryUserStore()
+	userService := service.NewUserService(userStore)
+	userHandler := handlers.NewUserHandler(userService)
+
+	r.POST("/users", userHandler.CreateUser)
+	r.GET("/users/:id", userHandler.GetUserByID)
+
 	return &App{
-		server: r,
+		server:      r,
+		userHandler: userHandler,
 	}
 }
 

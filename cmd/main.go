@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"gihtub.com/fabulias/task-management-backend/users-service/internal/app"
-	"gihtub.com/fabulias/task-management-backend/users-service/internal/config"
+	"gihtub.com/tasks-hub/users-service/internal/app"
+	"gihtub.com/tasks-hub/users-service/internal/config"
+
 	"github.com/Netflix/go-env"
 	"go.uber.org/zap"
 )
