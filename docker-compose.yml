@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      ENVIRONMENT: local
+      GIN_MODE: debug
+
+  db:
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: users_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password
+
+  goose:
+    image: gomicro/goose:latest
+    depends_on:
+      - db
+    environment:
+      - GOOSE_DRIVER=postgres
+      - GOOSE_DBSTRING=postgres://admin:admin_password@db/users_db?sslmode=disable
+      - GOOSE_DIR=/database/migrations
+    volumes:
+      - ./migrations:/database/migrations
