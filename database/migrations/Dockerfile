@@ -12,7 +12,7 @@ COPY . .
 
 # Establece la variable de entorno para indicar la ubicación del archivo de configuración de la base de datos
 ENV GOOSE_DRIVER=postgres \
-    GOOSE_DBSTRING="user=admin password=admin_password host=db sslmode=disable" \
+    GOOSE_DBSTRING="user=admin password=admin_password host=db database=users_db sslmode=disable" \
     GOOSE_DIR=migrations
 
 # Comando por defecto para ejecutar migraciones (ajusta según tus necesidades)
