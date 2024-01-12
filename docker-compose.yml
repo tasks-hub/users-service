@@ -25,12 +25,8 @@ services:
       POSTGRES_PASSWORD: admin_password
 
   goose:
-    image: gomicro/goose:latest
+    build:
+      context: ./database/migrations
+      dockerfile: Dockerfile
     depends_on:
       - db
-    environment:
-      - GOOSE_DRIVER=postgres
-      - GOOSE_DBSTRING=postgres://admin:admin_password@db/users_db?sslmode=disable
-      - GOOSE_DIR=/database/migrations
-    volumes:
-      - ./migrations:/database/migrations
