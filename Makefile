@@ -19,3 +19,9 @@ run:
 	@echo "[run] running service in local environment"
 	@export $$(cat .env) \
 		&& go run cmd/main.go
+
+CONTAINER_NAME = users-service-goose-1
+
+run-migrations:
+	docker exec -it $(CONTAINER_NAME) chmod +x ./run_migrations.sh
+	docker exec -it $(CONTAINER_NAME) ./run_migrations.sh

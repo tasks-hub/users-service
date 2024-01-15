@@ -32,10 +32,16 @@ services:
     build:
       context: ./database/migrations
       dockerfile: Dockerfile
-      args:
-        - POSTGRES_DB=users_db
-        - POSTGRES_USER=admin
-        - POSTGRES_PASSWORD=admin_password
+    environment:
+      POSTGRES_HOST_FILE: /run/secrets/db_host
+      POSTGRES_DB_FILE: /run/secrets/db_name
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+       - db_password
+       - db_user
+       - db_name
+       - db_host
     depends_on:
       - db
     deploy:
@@ -52,4 +58,6 @@ secrets:
     file: ./secrets/db_user.txt
   db_name:
     file: ./secrets/db_name.txt
+  db_host:
+    file: ./secrets/db_host.txt
     
