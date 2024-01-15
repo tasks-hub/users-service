@@ -1,2 +1,2 @@
-# Use the official PostgreSQL image as a base
-FROM postgres:latest
+# Use the AWS PostgreSQL image as a base
+FROM public.ecr.aws/docker/library/postgres:latest

@@ -1,30 +1,14 @@
-# Usa la imagen oficial de Golang como base
-FROM golang:latest
+# Use the official AWS Golang image as a base
+FROM public.ecr.aws/docker/library/golang:latest
 
-# Establece el directorio de trabajo dentro del contenedor
+# Set the working directory inside the container
 WORKDIR /app
 
-# Instala Goose
+# Install Goose
 RUN go install github.com/pressly/goose/v3/cmd/goose@latest
 
-ARG POSTGRES_HOST_FILE
-ARG POSTGRES_DB_FILE
-ARG POSTGRES_USER_FILE
-ARG POSTGRES_PASSWORD_FILE
-
-# Set environment variables directly
-RUN POSTGRES_HOST=$(cat $POSTGRES_HOST_FILE) && \
-    POSTGRES_DB=$(cat $POSTGRES_DB_FILE) && \
-    POSTGRES_USER=$(cat $POSTGRES_USER_FILE) && \
-    POSTGRES_PASSWORD=$(cat $POSTGRES_PASSWORD_FILE) && \
-    GOOSE_DRIVER=postgres && \
-    GOOSE_DBSTRING="user=$POSTGRES_USER password=$POSTGRES_PASSWORD host=$POSTGRES_HOST database=$POSTGRES_DB sslmode=disable" && \
-    GOOSE_DIR=migrations
-
-# Copia los archivos necesarios para las migraciones
+# Copy necessary migration files
 COPY . .
 
-
-# Comando por defecto para ejecutar migraciones (ajusta según tus necesidades)
+# Default command to run migrations (adjust as needed)
 ENTRYPOINT ["tail", "-f", "/dev/null"]
-
