@@ -53,11 +53,11 @@ services:
 
 secrets:
   db_password:
-    file: ./secrets/db_password.txt
+    file: ../tasks-hub/secrets/users-service/db_password.txt
   db_user:
-    file: ./secrets/db_user.txt
+    file: ../tasks-hub/secrets/users-service/db_user.txt
   db_name:
-    file: ./secrets/db_name.txt
+    file: ../tasks-hub/secrets/users-service/db_name.txt
   db_host:
-    file: ./secrets/db_host.txt
+    file: ../tasks-hub/secrets/users-service/db_host.txt
     
