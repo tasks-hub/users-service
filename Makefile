@@ -17,8 +17,7 @@ test:
 
 run:
 	@echo "[run] running service in local environment"
-	@export $$(cat .env) \
-		&& go run cmd/main.go
+	@docker-compose up --build
 
 CONTAINER_NAME = users-service-goose-1
 
