@@ -1,3 +1,8 @@
+DOCKER_COMPOSE = docker-compose
+DOCKER_COMPOSE_FILE = docker-compose.yml
+CONTAINER_NAME = users-service
+GOOSE_CONTAINER_NAME = ${CONTAINER_NAME}-goose-1
+
 build:
 	@echo "[build] building service"
 	@echo "	-> building users service..."
@@ -13,9 +18,16 @@ test:
 	@echo "[test] running local tests..."
 	@go test -v -count=1 -failfast ./...
 
-.PHONY: run
+run-migrations:
+	docker exec -it $(GOOSE_CONTAINER_NAME) chmod +x ./run_migrations.sh
+	docker exec -it $(GOOSE_CONTAINER_NAME) ./run_migrations.sh
 
+# Run the service in a local environment using Docker Compose
 run:
 	@echo "[run] running service in local environment"
-	@export $$(cat .env) \
-		&& go run cmd/main.go
+	@$(DOCKER_COMPOSE) up --build
+
+# Stop and remove the Docker Compose services
+down:
+	@echo "[down] stopping and removing services"
+	@$(DOCKER_COMPOSE) down

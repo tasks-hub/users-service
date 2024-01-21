@@ -1,0 +1,57 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT}
+      GIN_MODE: ${GIN_MODE}
+
+  db:
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB_FILE: /run/secrets/db_name
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+      - db_user
+      - db_name
+
+  goose:
+    build:
+      context: ./database/migrations
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST_FILE: /run/secrets/db_host
+      POSTGRES_DB_FILE: /run/secrets/db_name
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+       - db_password
+       - db_user
+       - db_name
+       - db_host
+    depends_on:
+      - db
+
+secrets:
+  db_password:
+    file: ../tasks-hub/secrets/users-service/db_password.txt
+  db_user:
+    file: ../tasks-hub/secrets/users-service/db_user.txt
+  db_name:
+    file: ../tasks-hub/secrets/users-service/db_name.txt
+  db_host:
+    file: ../tasks-hub/secrets/users-service/db_host.txt
+    
