@@ -1,10 +1,10 @@
 package app
 
 import (
-	"gihtub.com/tasks-hub/users-service/internal/config"
-	"gihtub.com/tasks-hub/users-service/internal/handlers"
-	"gihtub.com/tasks-hub/users-service/internal/service"
-	"gihtub.com/tasks-hub/users-service/internal/store"
+	"github.com/tasks-hub/users-service/internal/config"
+	"github.com/tasks-hub/users-service/internal/handlers"
+	"github.com/tasks-hub/users-service/internal/service"
+	"github.com/tasks-hub/users-service/internal/store"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,6 +26,9 @@ func NewServer(cfg config.Config) *App {
 
 	r.POST("/users", userHandler.CreateUser)
 	r.GET("/users/:id", userHandler.GetUserByID)
+	r.PUT("/users/:id", userHandler.UpdateUserProfile)
+	r.PUT("/users/:id/password", userHandler.ChangePassword)
+	r.DELETE("/users/:id", userHandler.DeleteUser)
 
 	return &App{
 		server:      r,

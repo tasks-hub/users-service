@@ -22,9 +22,14 @@ run-migrations:
 	docker exec -it $(GOOSE_CONTAINER_NAME) chmod +x ./run_migrations.sh
 	docker exec -it $(GOOSE_CONTAINER_NAME) ./run_migrations.sh
 
+run-local:
+	@echo "[run-local] running service in local environment"
+	@export $$(cat .env) \
+		&& go run cmd/main.go
+
 # Run the service in a local environment using Docker Compose
-run:
-	@echo "[run] running service in local environment"
+run-docker:
+	@echo "[run/docker] running service in local environment"
 	@$(DOCKER_COMPOSE) up --build
 
 # Stop and remove the Docker Compose services

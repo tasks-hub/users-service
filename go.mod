@@ -1,4 +1,4 @@
-module gihtub.com/tasks-hub/users-service
+module github.com/tasks-hub/users-service
 
 go 1.21.6
 
