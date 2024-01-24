@@ -1,0 +1,19 @@
+name: Build
+on: [pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: 'go.mod'
+      
+      - name: Go version
+        run: go version
+
+      - name: Build project
+        run: go build cmd/main.go
+
