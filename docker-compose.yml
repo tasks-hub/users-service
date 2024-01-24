@@ -12,7 +12,18 @@ services:
     environment:
       ENVIRONMENT: ${ENVIRONMENT}
       GIN_MODE: ${GIN_MODE}
-
+      DATABASE_TYPE: ${DATABASE_TYPE}
+      POSTGRES_HOST_FILE: /run/secrets/db_host
+      POSTGRES_DB_FILE: /run/secrets/db_name
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+       - db_password
+       - db_user
+       - db_name
+       - db_host
+    restart: always
+    
   db:
     build:
       context: ./database

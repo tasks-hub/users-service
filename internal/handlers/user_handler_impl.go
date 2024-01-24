@@ -3,6 +3,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -30,39 +31,30 @@ func (u *UserHandlerImpl) CreateUser(c *gin.Context) {
 		return
 	}
 
-	err := u.userService.CreateUser(userInput)
+	userID, err := u.userService.CreateUser(userInput)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "user created successfully"})
+	c.JSON(http.StatusCreated, gin.H{"message": fmt.Sprintf("user created successfully; ID: %s", userID)})
 }
 
 // GetUserByID handles a request to retrieve a user by ID
 func (u *UserHandlerImpl) GetUserByID(c *gin.Context) {
-	userID, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
-		return
-	}
+	userID := c.Param("id")
 
 	user, err := u.userService.GetUserByID(userID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-
 	c.JSON(http.StatusOK, user)
 }
 
 // UpdateUserProfile handles a request to update user profile
 func (u *UserHandlerImpl) UpdateUserProfile(c *gin.Context) {
-	userID, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
-		return
-	}
+	userID := c.Param("id")
 
 	var userProfileInput entities.UpdateUserInput
 	if err := c.ShouldBindJSON(&userProfileInput); err != nil {
@@ -70,7 +62,7 @@ func (u *UserHandlerImpl) UpdateUserProfile(c *gin.Context) {
 		return
 	}
 
-	err = u.userService.UpdateUserProfile(userID, userProfileInput)
+	err := u.userService.UpdateUserProfile(userID, userProfileInput)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update user profile"})
 		return
@@ -81,11 +73,7 @@ func (u *UserHandlerImpl) UpdateUserProfile(c *gin.Context) {
 
 // ChangePassword handles a request to change user password
 func (u *UserHandlerImpl) ChangePassword(c *gin.Context) {
-	userID, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
-		return
-	}
+	userID := c.Param("id")
 
 	var passwordInput entities.UpdateUserInput
 	if err := c.ShouldBindJSON(&passwordInput); err != nil {
@@ -93,7 +81,7 @@ func (u *UserHandlerImpl) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	err = u.userService.ChangePassword(userID, passwordInput)
+	err := u.userService.ChangePassword(userID, passwordInput)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to change password"})
 		return

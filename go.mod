@@ -5,7 +5,10 @@ go 1.21.6
 require (
 	github.com/Netflix/go-env v0.0.0-20220526054621-78278af1949d
 	github.com/gin-gonic/gin v1.9.1
+	github.com/jmoiron/sqlx v1.3.5
+	github.com/lib/pq v1.10.9
 	go.uber.org/zap v1.26.0
+	golang.org/x/crypto v0.18.0
 )
 
 require (
@@ -28,7 +31,6 @@ require (
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect

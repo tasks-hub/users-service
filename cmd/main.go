@@ -25,7 +25,11 @@ func main() {
 	}
 	defer logger.Sync()
 
-	srv := app.NewServer(conf)
+	srv, err := app.NewServer(conf)
+	if err != nil {
+		logger.Fatal(err.Error())
+
+	}
 	if err := srv.Run(); err != nil {
 		logger.Fatal("server couldn't start")
 	}

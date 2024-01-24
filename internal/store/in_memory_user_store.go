@@ -4,6 +4,7 @@ package store
 
 import (
 	"errors"
+	"strconv"
 	"sync"
 
 	"github.com/tasks-hub/users-service/internal/entities"
@@ -23,11 +24,15 @@ func NewInMemoryUserStore() *InMemoryUserStore {
 }
 
 // GetUserByID retrieves a user by ID from the in-memory database
-func (u *InMemoryUserStore) GetUserByID(userID int) (*entities.User, error) {
+func (u *InMemoryUserStore) GetUserByID(userID string) (*entities.User, error) {
 	u.mu.RLock()
 	defer u.mu.RUnlock()
 
-	user, exists := u.users[userID]
+	userIDNumber, err := strconv.Atoi(userID)
+	if err != nil {
+		return nil, err
+	}
+	user, exists := u.users[userIDNumber]
 	if !exists {
 		return nil, errors.New("user not found")
 	}
@@ -36,7 +41,7 @@ func (u *InMemoryUserStore) GetUserByID(userID int) (*entities.User, error) {
 }
 
 // CreateUser creates a new user in the in-memory database
-func (u *InMemoryUserStore) CreateUser(user *entities.CreateUserInput) error {
+func (u *InMemoryUserStore) CreateUser(user *entities.CreateUserInput) (string, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
@@ -45,7 +50,7 @@ func (u *InMemoryUserStore) CreateUser(user *entities.CreateUserInput) error {
 
 	// Create a new user entity
 	newUser := &entities.User{
-		ID:       newUserID,
+		ID:       strconv.Itoa(newUserID),
 		Username: user.Username,
 		Email:    user.Email,
 		// Other fields can be initialized here
@@ -53,7 +58,7 @@ func (u *InMemoryUserStore) CreateUser(user *entities.CreateUserInput) error {
 
 	u.users[newUserID] = newUser
 
-	return nil
+	return strconv.Itoa(newUserID), nil
 }
 
 // UpdateUser updates the information of an existing user in the in-memory database
@@ -62,7 +67,11 @@ func (u *InMemoryUserStore) UpdateUser(updatedUser *entities.User) error {
 	defer u.mu.Unlock()
 
 	// Check if the user exists
-	user, exists := u.users[updatedUser.ID]
+	userID, err := strconv.Atoi(updatedUser.ID)
+	if err != nil {
+		return err
+	}
+	user, exists := u.users[userID]
 	if !exists {
 		return errors.New("user not found")
 	}
