@@ -7,7 +7,7 @@ import (
 	"github.com/tasks-hub/users-service/internal/config"
 	"github.com/tasks-hub/users-service/internal/entities"
 
-	"github.com/Masterminds/squirrel"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -60,16 +60,17 @@ func NewPostgresUserStore(cfg config.Database) (*PostgresUserStore, error) {
 // CreateUser creates a new user in the data store and returns the ID of the created user
 func (p *PostgresUserStore) CreateUser(user *entities.CreateUserInput) (string, error) {
 	var userID string
-	query, args, err := squirrel.
+	query, args, err := sq.
 		Insert("users").
 		Columns("username", "email", "password").
 		Values(user.Username, user.Email, user.Password).
 		Suffix("RETURNING id").
+		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return userID, fmt.Errorf("error building SQL query for user creation: %v", err)
 	}
-
+	fmt.Println(query, args)
 	err = p.db.QueryRowx(query, args...).Scan(&userID)
 	if err != nil {
 		return userID, fmt.Errorf("error creating user: %v", err)
@@ -80,10 +81,11 @@ func (p *PostgresUserStore) CreateUser(user *entities.CreateUserInput) (string, 
 // GetUserByID retrieves a user from the data store based on the user ID
 func (p *PostgresUserStore) GetUserByID(userID string) (*entities.User, error) {
 	var user entities.User
-	query, args, err := squirrel.
+	query, args, err := sq.
 		Select("*").
 		From("users").
-		Where(squirrel.Eq{"id": userID, "deleted_at": nil}).
+		Where(sq.Eq{"id": userID, "deleted_at": nil}).
+		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("error building SQL query for user retrieval by ID: %v", err)
@@ -97,7 +99,7 @@ func (p *PostgresUserStore) GetUserByID(userID string) (*entities.User, error) {
 }
 
 func (p *PostgresUserStore) UpdateUser(user *entities.User) error {
-	updateBuilder := squirrel.Update("users")
+	updateBuilder := sq.Update("users")
 
 	if user.Username != "" {
 		updateBuilder = updateBuilder.Set("username", user.Username)
@@ -109,7 +111,9 @@ func (p *PostgresUserStore) UpdateUser(user *entities.User) error {
 		updateBuilder = updateBuilder.Set("password", user.Password)
 	}
 
-	updateBuilder = updateBuilder.Where(squirrel.Eq{"id": user.ID, "deleted_at": nil})
+	updateBuilder = updateBuilder.
+		Where(sq.Eq{"id": user.ID, "deleted_at": nil}).
+		PlaceholderFormat(sq.Dollar)
 
 	query, args, err := updateBuilder.ToSql()
 	if err != nil {
@@ -132,10 +136,11 @@ func (p *PostgresUserStore) UpdateUser(user *entities.User) error {
 
 // DeleteUser deletes a user from the data store based on the user ID (soft delete)
 func (p *PostgresUserStore) DeleteUser(userID string) error {
-	query, args, err := squirrel.
+	query, args, err := sq.
 		Update("users").
 		Set("deleted_at", "NOW()").
-		Where(squirrel.Eq{"id": userID}).
+		Where(sq.Eq{"id": userID}).
+		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return fmt.Errorf("error building SQL query for soft delete by ID: %v", err)
