@@ -29,7 +29,7 @@ run-local:
 
 # Run the service in a local environment using Docker Compose
 run-docker:
-	@echo "[run/docker] running service in local environment"
+	@echo "[run-docker] running service in local environment"
 	@$(DOCKER_COMPOSE) up --build
 
 # Stop and remove the Docker Compose services
