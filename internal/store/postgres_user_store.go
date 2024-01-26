@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 	"github.com/tasks-hub/users-service/internal/config"
 	"github.com/tasks-hub/users-service/internal/entities"
+
+	"github.com/Masterminds/squirrel"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 type PostgresUserStore struct {
@@ -58,17 +60,17 @@ func NewPostgresUserStore(cfg config.Database) (*PostgresUserStore, error) {
 // CreateUser creates a new user in the data store and returns the ID of the created user
 func (p *PostgresUserStore) CreateUser(user *entities.CreateUserInput) (string, error) {
 	var userID string
-	stmt, err := p.db.Preparex(`
-		INSERT INTO users (username, email, password)
-		VALUES ($1, $2, $3)
-		RETURNING id
-	`)
+	query, args, err := squirrel.
+		Insert("users").
+		Columns("username", "email", "password").
+		Values(user.Username, user.Email, user.Password).
+		Suffix("RETURNING id").
+		ToSql()
 	if err != nil {
-		return userID, fmt.Errorf("error preparing statement for user creation: %v", err)
+		return userID, fmt.Errorf("error building SQL query for user creation: %v", err)
 	}
-	defer stmt.Close()
 
-	err = stmt.QueryRowx(user.Username, user.Email, user.Password).Scan(&userID)
+	err = p.db.QueryRowx(query, args...).Scan(&userID)
 	if err != nil {
 		return userID, fmt.Errorf("error creating user: %v", err)
 	}
@@ -78,57 +80,41 @@ func (p *PostgresUserStore) CreateUser(user *entities.CreateUserInput) (string, 
 // GetUserByID retrieves a user from the data store based on the user ID
 func (p *PostgresUserStore) GetUserByID(userID string) (*entities.User, error) {
 	var user entities.User
-	stmt, err := p.db.Preparex(`
-		SELECT * FROM users
-		WHERE id = $1
-		AND deleted_at IS NULL
-	`)
+	query, args, err := squirrel.
+		Select("*").
+		From("users").
+		Where(squirrel.Eq{"id": userID, "deleted_at": nil}).
+		ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("error preparing statement for user retrieval by ID: %v", err)
+		return nil, fmt.Errorf("error building SQL query for user retrieval by ID: %v", err)
 	}
-	defer stmt.Close()
 
-	err = stmt.Get(&user, userID)
+	err = p.db.Get(&user, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("error getting user by ID: %v", err)
 	}
 	return &user, nil
 }
 
-// UpdateUser updates the information of an existing user in the data store.
-// It updates username, email, and/or password if the corresponding fields in the User struct are non-empty.
 func (p *PostgresUserStore) UpdateUser(user *entities.User) error {
-	var query string
-	var args []interface{}
+	updateBuilder := squirrel.Update("users")
 
 	if user.Username != "" {
-		query += "UPDATE users SET username=$1 "
-		args = append(args, user.Username)
+		updateBuilder = updateBuilder.Set("username", user.Username)
 	}
 	if user.Email != "" {
-		if query != "" {
-			query += ", "
-		}
-		query += "email=$" + fmt.Sprint(len(args)+1)
-		args = append(args, user.Email)
+		updateBuilder = updateBuilder.Set("email", user.Email)
 	}
 	if string(user.Password) != "" {
-		if query != "" {
-			query += ", "
-		}
-		query += "password=$" + fmt.Sprint(len(args)+1)
-		args = append(args, user.Password)
+		updateBuilder = updateBuilder.Set("password", user.Password)
 	}
 
-	if query == "" {
-		// No fields to update
-		return nil
+	updateBuilder = updateBuilder.Where(squirrel.Eq{"id": user.ID, "deleted_at": nil})
+
+	query, args, err := updateBuilder.ToSql()
+	if err != nil {
+		return fmt.Errorf("error building SQL query: %v", err)
 	}
-
-	query += " WHERE id=$" + fmt.Sprint(len(args)+1)
-	args = append(args, user.ID)
-
-	query += " AND deleted_at IS NULL"
 
 	stmt, err := p.db.Preparex(query)
 	if err != nil {
@@ -140,22 +126,22 @@ func (p *PostgresUserStore) UpdateUser(user *entities.User) error {
 	if err != nil {
 		return fmt.Errorf("error updating user: %v", err)
 	}
+
 	return nil
 }
 
 // DeleteUser deletes a user from the data store based on the user ID (soft delete)
 func (p *PostgresUserStore) DeleteUser(userID string) error {
-	stmt, err := p.db.Preparex(`
-		UPDATE users
-		SET deleted_at = NOW()
-		WHERE id = $1
-	`)
+	query, args, err := squirrel.
+		Update("users").
+		Set("deleted_at", "NOW()").
+		Where(squirrel.Eq{"id": userID}).
+		ToSql()
 	if err != nil {
-		return fmt.Errorf("error preparing statement for soft delete by ID: %v", err)
+		return fmt.Errorf("error building SQL query for soft delete by ID: %v", err)
 	}
-	defer stmt.Close()
 
-	_, err = stmt.Exec(userID)
+	_, err = p.db.Exec(query, args...)
 	if err != nil {
 		return fmt.Errorf("error performing soft delete by ID: %v", err)
 	}
