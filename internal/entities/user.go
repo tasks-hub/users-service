@@ -18,12 +18,15 @@ type CreateUserInput struct {
 
 // UpdateUserInput represents the input for updating user profile
 type UpdateUserInput struct {
+	UserID   string `json:"userID"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}
+
+type UpdateUserPasswordInput struct {
 	UserID      string `json:"userID"`
-	Username    string `json:"username"`
-	Email       string `json:"email"`
-	Password    string `json:"password,omitempty"`
-	OldPassword string `json:"oldPassword" binding:"required,min=8"`
-	NewPassword string `json:"newPassword" binding:"required,min=8"`
+	OldPassword string `json:"oldPassword" binding:"required,min=12"`
+	NewPassword string `json:"newPassword" binding:"required,min=12"`
 }
 
 // User represents the user entity

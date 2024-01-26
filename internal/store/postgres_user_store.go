@@ -81,6 +81,7 @@ func (p *PostgresUserStore) GetUserByID(userID string) (*entities.User, error) {
 	stmt, err := p.db.Preparex(`
 		SELECT * FROM users
 		WHERE id = $1
+		AND deleted_at IS NULL
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("error preparing statement for user retrieval by ID: %v", err)
@@ -94,39 +95,69 @@ func (p *PostgresUserStore) GetUserByID(userID string) (*entities.User, error) {
 	return &user, nil
 }
 
-// UpdateUser updates the information of an existing user in the data store
+// UpdateUser updates the information of an existing user in the data store.
+// It updates username, email, and/or password if the corresponding fields in the User struct are non-empty.
 func (p *PostgresUserStore) UpdateUser(user *entities.User) error {
-	stmt, err := p.db.Preparex(`
-		UPDATE users
-		SET username=$1, email=$2, password=$3
-		WHERE id=$4
-	`)
+	var query string
+	var args []interface{}
+
+	if user.Username != "" {
+		query += "UPDATE users SET username=$1 "
+		args = append(args, user.Username)
+	}
+	if user.Email != "" {
+		if query != "" {
+			query += ", "
+		}
+		query += "email=$" + fmt.Sprint(len(args)+1)
+		args = append(args, user.Email)
+	}
+	if string(user.Password) != "" {
+		if query != "" {
+			query += ", "
+		}
+		query += "password=$" + fmt.Sprint(len(args)+1)
+		args = append(args, user.Password)
+	}
+
+	if query == "" {
+		// No fields to update
+		return nil
+	}
+
+	query += " WHERE id=$" + fmt.Sprint(len(args)+1)
+	args = append(args, user.ID)
+
+	query += " AND deleted_at IS NULL"
+
+	stmt, err := p.db.Preparex(query)
 	if err != nil {
 		return fmt.Errorf("error preparing statement for user update: %v", err)
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(user.Username, user.Email, user.Password, user.ID)
+	_, err = stmt.Exec(args...)
 	if err != nil {
 		return fmt.Errorf("error updating user: %v", err)
 	}
 	return nil
 }
 
-// DeleteUser deletes a user from the data store based on the user ID
-func (p *PostgresUserStore) DeleteUser(userID int) error {
+// DeleteUser deletes a user from the data store based on the user ID (soft delete)
+func (p *PostgresUserStore) DeleteUser(userID string) error {
 	stmt, err := p.db.Preparex(`
-		DELETE FROM users
+		UPDATE users
+		SET deleted_at = NOW()
 		WHERE id = $1
 	`)
 	if err != nil {
-		return fmt.Errorf("error preparing statement for user deletion by ID: %v", err)
+		return fmt.Errorf("error preparing statement for soft delete by ID: %v", err)
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(userID)
 	if err != nil {
-		return fmt.Errorf("error deleting user by ID: %v", err)
+		return fmt.Errorf("error performing soft delete by ID: %v", err)
 	}
 	return nil
 }

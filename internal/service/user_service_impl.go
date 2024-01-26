@@ -56,10 +56,6 @@ func (u *UserServiceImpl) UpdateUserProfile(userID string, input entities.Update
 		return err
 	}
 
-	if input.NewPassword != "" {
-		return errors.New("update user profile expect a new password")
-	}
-
 	existingUser.Username = input.Username
 	existingUser.Email = input.Email
 
@@ -67,31 +63,35 @@ func (u *UserServiceImpl) UpdateUserProfile(userID string, input entities.Update
 }
 
 // ChangePassword changes user password
-func (u *UserServiceImpl) ChangePassword(userID string, input entities.UpdateUserInput) error {
+func (u *UserServiceImpl) ChangePassword(userID string, input entities.UpdateUserPasswordInput) error {
 	// Retrieve the existing user for comparison
 	existingUser, err := u.userStore.GetUserByID(userID)
 	if err != nil {
 		return err
 	}
 
-	// Check for disallowed fields
-	if input.Username != "" || input.Email != "" {
-		return errors.New("user has not expected fields")
+	err = bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(input.OldPassword))
+	if err != nil {
+		return errors.New("old password is wrong")
 	}
 
-	// Verify old password
-	if input.OldPassword != string(existingUser.Password) {
-		return errors.New("Old password does not match")
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return errors.New("can't generate hash password")
 	}
 
 	// Apply changes to the allowed fields
-	existingUser.Password = []byte(input.NewPassword)
+	existingUser.Password = hashedPassword
 
 	// Call the store method to update the user
 	return u.userStore.UpdateUser(existingUser)
 }
 
 // DeleteUser deletes a user by ID
-func (u *UserServiceImpl) DeleteUser(userID int) error {
-	return u.userStore.DeleteUser(userID)
+func (u *UserServiceImpl) DeleteUser(userID string) error {
+	user, err := u.userStore.GetUserByID(userID)
+	if err != nil {
+		return err
+	}
+	return u.userStore.DeleteUser(user.ID)
 }

@@ -5,7 +5,6 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/tasks-hub/users-service/internal/entities"
 	service "github.com/tasks-hub/users-service/internal/service"
@@ -33,11 +32,11 @@ func (u *UserHandlerImpl) CreateUser(c *gin.Context) {
 
 	userID, err := u.userService.CreateUser(userInput)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": fmt.Sprintf("user created successfully; ID: %s", userID)})
+	c.JSON(http.StatusCreated, gin.H{"UserID": fmt.Sprintf("%s", userID)})
 }
 
 // GetUserByID handles a request to retrieve a user by ID
@@ -64,7 +63,7 @@ func (u *UserHandlerImpl) UpdateUserProfile(c *gin.Context) {
 
 	err := u.userService.UpdateUserProfile(userID, userProfileInput)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update user profile"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -75,7 +74,7 @@ func (u *UserHandlerImpl) UpdateUserProfile(c *gin.Context) {
 func (u *UserHandlerImpl) ChangePassword(c *gin.Context) {
 	userID := c.Param("id")
 
-	var passwordInput entities.UpdateUserInput
+	var passwordInput entities.UpdateUserPasswordInput
 	if err := c.ShouldBindJSON(&passwordInput); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -83,7 +82,7 @@ func (u *UserHandlerImpl) ChangePassword(c *gin.Context) {
 
 	err := u.userService.ChangePassword(userID, passwordInput)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to change password"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -92,15 +91,11 @@ func (u *UserHandlerImpl) ChangePassword(c *gin.Context) {
 
 // DeleteUser handles a request to delete a user
 func (u *UserHandlerImpl) DeleteUser(c *gin.Context) {
-	userID, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
-		return
-	}
+	userID := c.Param("id")
 
-	err = u.userService.DeleteUser(userID)
+	err := u.userService.DeleteUser(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete user"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

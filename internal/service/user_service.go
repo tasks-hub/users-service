@@ -7,6 +7,6 @@ type UserService interface {
 	CreateUser(input entities.CreateUserInput) (string, error)
 	GetUserByID(userID string) (*entities.User, error)
 	UpdateUserProfile(userID string, input entities.UpdateUserInput) error
-	ChangePassword(userID string, input entities.UpdateUserInput) error
-	DeleteUser(userID int) error
+	ChangePassword(userID string, input entities.UpdateUserPasswordInput) error
+	DeleteUser(userID string) error
 }

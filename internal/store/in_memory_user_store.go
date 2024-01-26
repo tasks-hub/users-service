@@ -85,18 +85,22 @@ func (u *InMemoryUserStore) UpdateUser(updatedUser *entities.User) error {
 }
 
 // DeleteUser deletes a user by ID from the in-memory database
-func (u *InMemoryUserStore) DeleteUser(userID int) error {
+func (u *InMemoryUserStore) DeleteUser(userID string) error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
 	// Check if the user exists
-	_, exists := u.users[userID]
+	ID, err := strconv.Atoi(userID)
+	if err != nil {
+		return err
+	}
+	_, exists := u.users[ID]
 	if !exists {
 		return errors.New("user not found")
 	}
 
 	// Delete the user from the in-memory database
-	delete(u.users, userID)
+	delete(u.users, ID)
 
 	return nil
 }
