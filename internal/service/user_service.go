@@ -1,9 +1,12 @@
 package service
 
-import "gihtub.com/tasks-hub/users-service/internal/entities"
+import "github.com/tasks-hub/users-service/internal/entities"
 
-// UserService defines the interface for user-related services
+// UserService defines operations for the user service
 type UserService interface {
-	GetUserByID(userID int) (*entities.User, error) // GetUserByID retrieves a user by ID
-	CreateUser(user *entities.User) error           // CreateUser creates a new user
+	CreateUser(input entities.CreateUserInput) (string, error)
+	GetUserByID(userID string) (*entities.User, error)
+	UpdateUserProfile(userID string, input entities.UpdateUserInput) error
+	ChangePassword(userID string, input entities.UpdateUserPasswordInput) error
+	DeleteUser(userID string) error
 }

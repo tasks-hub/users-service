@@ -58,6 +58,7 @@ Temporary Items
 *.icloud
 
 ### VisualStudioCode ###
+.vscode
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -77,3 +78,5 @@ Temporary Items
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/go,macos,visualstudiocode
+
+bin/

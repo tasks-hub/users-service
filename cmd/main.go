@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"gihtub.com/tasks-hub/users-service/internal/app"
-	"gihtub.com/tasks-hub/users-service/internal/config"
+	"github.com/tasks-hub/users-service/internal/app"
+	"github.com/tasks-hub/users-service/internal/config"
 
 	"github.com/Netflix/go-env"
 	"go.uber.org/zap"
@@ -25,7 +25,11 @@ func main() {
 	}
 	defer logger.Sync()
 
-	srv := app.NewServer(conf)
+	srv, err := app.NewServer(conf)
+	if err != nil {
+		logger.Fatal(err.Error())
+
+	}
 	if err := srv.Run(); err != nil {
 		logger.Fatal("server couldn't start")
 	}

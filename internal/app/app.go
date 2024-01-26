@@ -1,10 +1,10 @@
 package app
 
 import (
-	"gihtub.com/tasks-hub/users-service/internal/config"
-	"gihtub.com/tasks-hub/users-service/internal/handlers"
-	"gihtub.com/tasks-hub/users-service/internal/service"
-	"gihtub.com/tasks-hub/users-service/internal/store"
+	"github.com/tasks-hub/users-service/internal/config"
+	"github.com/tasks-hub/users-service/internal/handlers"
+	"github.com/tasks-hub/users-service/internal/service"
+	"github.com/tasks-hub/users-service/internal/store"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,23 +14,30 @@ type App struct {
 	userHandler handlers.UserHandler
 }
 
-func NewServer(cfg config.Config) *App {
+func NewServer(cfg config.Config) (*App, error) {
 	r := gin.Default()
 
+	v1Group := r.Group("v1")
 	healthHandler := handlers.NewHealthHandler()
-	r.GET("/health", healthHandler.Health)
+	v1Group.GET("/health", healthHandler.Health)
 
-	userStore := store.NewInMemoryUserStore()
+	userStore, err := store.NewUserStoreFactory(cfg.DatabaseType, cfg.Database)
+	if err != nil {
+		return nil, err
+	}
 	userService := service.NewUserService(userStore)
 	userHandler := handlers.NewUserHandler(userService)
 
-	r.POST("/users", userHandler.CreateUser)
-	r.GET("/users/:id", userHandler.GetUserByID)
+	v1Group.POST("/users", userHandler.CreateUser)
+	v1Group.GET("/users/:id", userHandler.GetUserByID)
+	v1Group.PUT("/users/:id", userHandler.UpdateUserProfile)
+	v1Group.PUT("/users/:id/password", userHandler.ChangePassword)
+	v1Group.DELETE("/users/:id", userHandler.DeleteUser)
 
 	return &App{
 		server:      r,
 		userHandler: userHandler,
-	}
+	}, nil
 }
 
 func (app *App) Run() error {
