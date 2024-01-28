@@ -29,6 +29,11 @@ type UpdateUserPasswordInput struct {
 	NewPassword string `json:"newPassword" binding:"required,min=12"`
 }
 
+type UserCredentials struct {
+	Email    string `json:"email"`
+	Password string `json:"password" binding:"required,min=12"`
+}
+
 // User represents the user entity
 type User struct {
 	ID       string  `db:"id"`

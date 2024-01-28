@@ -1,6 +1,7 @@
 package store
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 
@@ -58,24 +59,24 @@ func NewPostgresUserStore(cfg config.Database) (*PostgresUserStore, error) {
 }
 
 // CreateUser creates a new user in the data store and returns the ID of the created user
-func (p *PostgresUserStore) CreateUser(user *entities.CreateUserInput) (string, error) {
-	var userID string
+func (p *PostgresUserStore) CreateUser(userInput *entities.CreateUserInput) (*entities.User, error) {
+	var user entities.User
 	query, args, err := sq.
 		Insert("users").
 		Columns("username", "email", "password").
-		Values(user.Username, user.Email, user.Password).
-		Suffix("RETURNING id").
+		Values(userInput.Username, userInput.Email, userInput.Password).
+		Suffix("RETURNING *").
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
-		return userID, fmt.Errorf("error building SQL query for user creation: %v", err)
+		return nil, fmt.Errorf("error building SQL query for user creation: %v", err)
 	}
-	fmt.Println(query, args)
-	err = p.db.QueryRowx(query, args...).Scan(&userID)
+
+	err = p.db.QueryRowx(query, args...).StructScan(&user)
 	if err != nil {
-		return userID, fmt.Errorf("error creating user: %v", err)
+		return nil, fmt.Errorf("error creating user: %v", err)
 	}
-	return userID, nil
+	return &user, nil
 }
 
 // GetUserByID retrieves a user from the data store based on the user ID
@@ -93,6 +94,29 @@ func (p *PostgresUserStore) GetUserByID(userID string) (*entities.User, error) {
 
 	err = p.db.Get(&user, query, args...)
 	if err != nil {
+		return nil, fmt.Errorf("error getting user by ID: %v", err)
+	}
+	return &user, nil
+}
+
+// GetUserByEmail retrieves a user from the data store based on the user email
+func (p *PostgresUserStore) GetUserByEmail(userCredentials *entities.UserCredentials) (*entities.User, error) {
+	var user entities.User
+	query, args, err := sq.
+		Select("*").
+		From("users").
+		Where(sq.Eq{"email": userCredentials.Email, "deleted_at": nil}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("error building SQL query for user retrieval by ID: %v", err)
+	}
+
+	err = p.db.Get(&user, query, args...)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("user not found: %v", err)
+		}
 		return nil, fmt.Errorf("error getting user by ID: %v", err)
 	}
 	return &user, nil
