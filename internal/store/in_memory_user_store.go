@@ -40,8 +40,28 @@ func (u *InMemoryUserStore) GetUserByID(userID string) (*entities.User, error) {
 	return user, nil
 }
 
+// GetUserByEmail retrieves a user by email and password from the in-memory database
+func (u *InMemoryUserStore) GetUserByEmail(userCredentials *entities.UserCredentials) (*entities.User, error) {
+	u.mu.RLock()
+	defer u.mu.RUnlock()
+
+	user := &entities.User{}
+	exists := false
+	for _, u := range u.users {
+		if u.Email == userCredentials.Email && string(u.Password) == userCredentials.Password {
+			user = u
+			exists = true
+		}
+	}
+	if !exists {
+		return nil, errors.New("user not found")
+	}
+
+	return user, nil
+}
+
 // CreateUser creates a new user in the in-memory database
-func (u *InMemoryUserStore) CreateUser(user *entities.CreateUserInput) (string, error) {
+func (u *InMemoryUserStore) CreateUser(user *entities.CreateUserInput) (*entities.User, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
@@ -58,7 +78,7 @@ func (u *InMemoryUserStore) CreateUser(user *entities.CreateUserInput) (string, 
 
 	u.users[newUserID] = newUser
 
-	return strconv.Itoa(newUserID), nil
+	return newUser, nil
 }
 
 // UpdateUser updates the information of an existing user in the in-memory database

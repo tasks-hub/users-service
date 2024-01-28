@@ -3,7 +3,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/tasks-hub/users-service/internal/entities"
@@ -30,13 +29,13 @@ func (u *UserHandlerImpl) CreateUser(c *gin.Context) {
 		return
 	}
 
-	userID, err := u.userService.CreateUser(userInput)
+	user, err := u.userService.CreateUser(userInput)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"UserID": fmt.Sprintf("%s", userID)})
+	c.JSON(http.StatusCreated, user)
 }
 
 // GetUserByID handles a request to retrieve a user by ID
@@ -48,6 +47,22 @@ func (u *UserHandlerImpl) GetUserByID(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
+	c.JSON(http.StatusOK, user)
+}
+
+func (u *UserHandlerImpl) GetUserByEmail(c *gin.Context) {
+	var userCredentials *entities.UserCredentials
+	if err := c.ShouldBindJSON(&userCredentials); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := u.userService.GetUserByEmail(userCredentials)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusOK, user)
 }
 

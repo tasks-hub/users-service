@@ -30,6 +30,7 @@ func NewServer(cfg config.Config) (*App, error) {
 
 	v1Group.POST("/users", userHandler.CreateUser)
 	v1Group.GET("/users/:id", userHandler.GetUserByID)
+	v1Group.POST("/users/authenticate", userHandler.GetUserByEmail)
 	v1Group.PUT("/users/:id", userHandler.UpdateUserProfile)
 	v1Group.PUT("/users/:id/password", userHandler.ChangePassword)
 	v1Group.DELETE("/users/:id", userHandler.DeleteUser)

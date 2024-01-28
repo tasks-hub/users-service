@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/tasks-hub/users-service/internal/entities"
 	"github.com/tasks-hub/users-service/internal/store"
@@ -19,7 +20,7 @@ func NewUserService(userStore store.UserStore) *UserServiceImpl {
 }
 
 // CreateUser registers a new user
-func (u *UserServiceImpl) CreateUser(input entities.CreateUserInput) (string, error) {
+func (u *UserServiceImpl) CreateUser(input entities.CreateUserInput) (*entities.User, error) {
 	// Convert CreateUserInput to store.User
 	storeUser := &entities.CreateUserInput{
 		UserInput: entities.UserInput{
@@ -31,11 +32,16 @@ func (u *UserServiceImpl) CreateUser(input entities.CreateUserInput) (string, er
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(storeUser.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", errors.New("can't generate password for user")
+		return nil, errors.New("can't generate password for user")
 	}
 	storeUser.Password = string(hashedPassword)
 
-	return u.userStore.CreateUser(storeUser)
+	user, err := u.userStore.CreateUser(storeUser)
+	if err != nil {
+		return nil, err
+	}
+	user.Password = []byte("")
+	return user, nil
 }
 
 // GetUserByID retrieves a user by ID
@@ -45,6 +51,22 @@ func (u *UserServiceImpl) GetUserByID(userID string) (*entities.User, error) {
 	if err != nil {
 		return nil, err
 	}
+	user.Password = []byte("")
+	return user, nil
+}
+
+// GetUserByEmail retrieves a user by email and password
+func (u *UserServiceImpl) GetUserByEmail(userCredentials *entities.UserCredentials) (*entities.User, error) {
+	// Call GetUserByEmail method of UserStore
+	user, err := u.userStore.GetUserByEmail(userCredentials)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = bcrypt.CompareHashAndPassword(user.Password, []byte(userCredentials.Password)); err != nil {
+		return nil, errors.New(fmt.Sprintf("wrong password for user %s", user.Email))
+	}
+
 	user.Password = []byte("")
 	return user, nil
 }
