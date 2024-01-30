@@ -1,8 +1,10 @@
 package config
 
 type Config struct {
-	Environment  string `env:"ENVIRONMENT,required=true"`
-	DatabaseType string `env:"DATABASE_TYPE,required=true"`
+	Environment              string `env:"ENVIRONMENT,required=true"`
+	DatabaseType             string `env:"DATABASE_TYPE,required=true"`
+	UserServicePort          string `env:"USER_SERVICE_PORT,required=true"`
+	UserServiceDatabaseTable string `env:"USER_SERVICE_DATABASE_TABLE,required=true"`
 	Database
 }
 
