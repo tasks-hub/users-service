@@ -14,10 +14,11 @@ import (
 )
 
 type PostgresUserStore struct {
-	db *sqlx.DB
+	db    *sqlx.DB
+	table string
 }
 
-func NewPostgresUserStore(cfg config.Database) (*PostgresUserStore, error) {
+func NewPostgresUserStore(cfg config.Config) (*PostgresUserStore, error) {
 	postgresHost, err := os.ReadFile(cfg.PostgresHostFile)
 	if err != nil {
 		return nil, fmt.Errorf("Error reading Postgres Host file: %v", err)
@@ -54,7 +55,8 @@ func NewPostgresUserStore(cfg config.Database) (*PostgresUserStore, error) {
 		return nil, err
 	}
 	return &PostgresUserStore{
-		db: db,
+		db:    db,
+		table: cfg.UserServiceDatabaseTable,
 	}, nil
 }
 
@@ -62,7 +64,7 @@ func NewPostgresUserStore(cfg config.Database) (*PostgresUserStore, error) {
 func (p *PostgresUserStore) CreateUser(userInput *entities.CreateUserInput) (*entities.User, error) {
 	var user entities.User
 	query, args, err := sq.
-		Insert("users").
+		Insert(p.table).
 		Columns("username", "email", "password").
 		Values(userInput.Username, userInput.Email, userInput.Password).
 		Suffix("RETURNING *").
@@ -84,7 +86,7 @@ func (p *PostgresUserStore) GetUserByID(userID string) (*entities.User, error) {
 	var user entities.User
 	query, args, err := sq.
 		Select("*").
-		From("users").
+		From(p.table).
 		Where(sq.Eq{"id": userID, "deleted_at": nil}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
@@ -104,7 +106,7 @@ func (p *PostgresUserStore) GetUserByEmail(userCredentials *entities.UserCredent
 	var user entities.User
 	query, args, err := sq.
 		Select("*").
-		From("users").
+		From(p.table).
 		Where(sq.Eq{"email": userCredentials.Email, "deleted_at": nil}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
@@ -123,7 +125,7 @@ func (p *PostgresUserStore) GetUserByEmail(userCredentials *entities.UserCredent
 }
 
 func (p *PostgresUserStore) UpdateUser(user *entities.User) error {
-	updateBuilder := sq.Update("users")
+	updateBuilder := sq.Update(p.table)
 
 	if user.Username != "" {
 		updateBuilder = updateBuilder.Set("username", user.Username)
@@ -161,7 +163,7 @@ func (p *PostgresUserStore) UpdateUser(user *entities.User) error {
 // DeleteUser deletes a user from the data store based on the user ID (soft delete)
 func (p *PostgresUserStore) DeleteUser(userID string) error {
 	query, args, err := sq.
-		Update("users").
+		Update(p.table).
 		Set("deleted_at", "NOW()").
 		Where(sq.Eq{"id": userID}).
 		PlaceholderFormat(sq.Dollar).

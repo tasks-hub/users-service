@@ -1,6 +1,6 @@
 DOCKER_COMPOSE = docker-compose
 DOCKER_COMPOSE_FILE = docker-compose.yml
-CONTAINER_NAME = users-service
+CONTAINER_NAME = tasks-hub-users
 GOOSE_CONTAINER_NAME = ${CONTAINER_NAME}-goose-1
 
 build:

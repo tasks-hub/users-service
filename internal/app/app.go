@@ -1,6 +1,8 @@
 package app
 
 import (
+	"fmt"
+
 	"github.com/tasks-hub/users-service/internal/config"
 	"github.com/tasks-hub/users-service/internal/handlers"
 	"github.com/tasks-hub/users-service/internal/service"
@@ -11,6 +13,7 @@ import (
 
 type App struct {
 	server      *gin.Engine
+	port        string
 	userHandler handlers.UserHandler
 }
 
@@ -21,7 +24,7 @@ func NewServer(cfg config.Config) (*App, error) {
 	healthHandler := handlers.NewHealthHandler()
 	v1Group.GET("/health", healthHandler.Health)
 
-	userStore, err := store.NewUserStoreFactory(cfg.DatabaseType, cfg.Database)
+	userStore, err := store.NewUserStoreFactory(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -38,9 +41,10 @@ func NewServer(cfg config.Config) (*App, error) {
 	return &App{
 		server:      r,
 		userHandler: userHandler,
+		port:        fmt.Sprintf(":%s", cfg.UserServicePort),
 	}, nil
 }
 
 func (app *App) Run() error {
-	return app.server.Run()
+	return app.server.Run(app.port)
 }
