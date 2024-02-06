@@ -6,17 +6,20 @@ import (
 
 	"github.com/tasks-hub/users-service/internal/entities"
 	"github.com/tasks-hub/users-service/internal/store"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // UserServiceImpl contains business logic for users
 type UserServiceImpl struct {
-	userStore store.UserStore
+	userStore      store.UserStore
+	passwordHasher PasswordHasher
 }
 
 // NewUserService creates a UserServiceImpl instance
-func NewUserService(userStore store.UserStore) *UserServiceImpl {
-	return &UserServiceImpl{userStore: userStore}
+func NewUserService(userStore store.UserStore, passwordHasher PasswordHasher) *UserServiceImpl {
+	return &UserServiceImpl{
+		userStore:      userStore,
+		passwordHasher: passwordHasher,
+	}
 }
 
 // CreateUser registers a new user
@@ -30,11 +33,11 @@ func (u *UserServiceImpl) CreateUser(input entities.CreateUserInput) (*entities.
 		Password: input.Password,
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(storeUser.Password), bcrypt.DefaultCost)
+	hashedPassword, err := u.passwordHasher.GenerateHash(storeUser.Password)
 	if err != nil {
-		return nil, errors.New("can't generate password for user")
+		return nil, err
 	}
-	storeUser.Password = string(hashedPassword)
+	storeUser.Password = hashedPassword
 
 	user, err := u.userStore.CreateUser(storeUser)
 	if err != nil {
@@ -63,7 +66,7 @@ func (u *UserServiceImpl) GetUserByEmail(userCredentials *entities.UserCredentia
 		return nil, err
 	}
 
-	if err = bcrypt.CompareHashAndPassword(user.Password, []byte(userCredentials.Password)); err != nil {
+	if err = u.passwordHasher.CompareHashAndPassword(user.Password, []byte(userCredentials.Password)); err != nil {
 		return nil, errors.New(fmt.Sprintf("wrong password for user %s", user.Email))
 	}
 
@@ -92,18 +95,18 @@ func (u *UserServiceImpl) ChangePassword(userID string, input entities.UpdateUse
 		return err
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(input.OldPassword))
+	err = u.passwordHasher.CompareHashAndPassword([]byte(existingUser.Password), []byte(input.OldPassword))
 	if err != nil {
 		return errors.New("old password is wrong")
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
+	hashedPassword, err := u.passwordHasher.GenerateHash(input.NewPassword)
 	if err != nil {
-		return errors.New("can't generate hash password")
+		return err
 	}
 
 	// Apply changes to the allowed fields
-	existingUser.Password = hashedPassword
+	existingUser.Password = []byte(hashedPassword)
 
 	// Call the store method to update the user
 	return u.userStore.UpdateUser(existingUser)

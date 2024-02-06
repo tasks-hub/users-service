@@ -28,7 +28,9 @@ func NewServer(cfg config.Config) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	userService := service.NewUserService(userStore)
+
+	bcryptPasswordHasher := &service.BcryptPasswordHasher{}
+	userService := service.NewUserService(userStore, bcryptPasswordHasher)
 	userHandler := handlers.NewUserHandler(userService)
 
 	v1Group.POST("/users", userHandler.CreateUser)
