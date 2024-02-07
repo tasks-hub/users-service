@@ -78,7 +78,7 @@ func TestCreateUser(t *testing.T) {
 
 	// Mock the password hashing to return the same password
 	mockPasswordHasher.On("GenerateHash", testInput.Password).Return(string(expectedUser.Password), nil)
-	// Ensure that CreateUser is called with the exact testInput (including the hashed password)
+	// Ensure that CreateUser is called with the exact testInput
 	mockUserStore.On("CreateUser", &testInput).Return(expectedUser, nil)
 
 	user, err := userService.CreateUser(testInput)
@@ -89,7 +89,6 @@ func TestCreateUser(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, user)
 	assert.Equal(t, expectedUser.ID, user.ID)
-	// Add more assertions based on your business logic and expected behavior
 }
 
 func TestGetUserByID(t *testing.T) {
@@ -114,5 +113,4 @@ func TestGetUserByID(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, user)
 	assert.Equal(t, expectedUser.ID, user.ID)
-	// Add more assertions based on your business logic and expected behavior
 }
