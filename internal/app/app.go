@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 
+	"github.com/tasks-hub/users-service"
 	"github.com/tasks-hub/users-service/internal/config"
 	"github.com/tasks-hub/users-service/internal/handlers"
 	"github.com/tasks-hub/users-service/internal/service"
@@ -14,7 +15,7 @@ import (
 type App struct {
 	server      *gin.Engine
 	port        string
-	userHandler handlers.UserHandler
+	userHandler users.UserHandler
 }
 
 func NewServer(cfg config.Config) (*App, error) {
