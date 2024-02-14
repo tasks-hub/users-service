@@ -16,7 +16,7 @@ clean:
 
 test:
 	@echo "[test] running local tests..."
-	@go test -v -count=1 -failfast ./...
+	@go test -v -count=1 -cover -failfast ./...
 
 run-migrations:
 	docker exec -it $(GOOSE_CONTAINER_NAME) chmod +x ./run_migrations.sh
