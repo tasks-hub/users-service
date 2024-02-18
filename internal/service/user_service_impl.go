@@ -14,7 +14,7 @@ type UserServiceImpl struct {
 	userStore store.UserStore
 }
 
-// NewUserService creates a UserServiceImpl instance
+// NewUserService creates a UserService instance
 func NewUserService(userStore store.UserStore) *UserServiceImpl {
 	return &UserServiceImpl{userStore: userStore}
 }

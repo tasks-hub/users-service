@@ -20,9 +20,9 @@ type App struct {
 func NewServer(cfg config.Config) (*App, error) {
 	r := gin.Default()
 
-	v1Group := r.Group("v1")
+	vGroup := r.Group(cfg.UserApiVersion)
 	healthHandler := handlers.NewHealthHandler()
-	v1Group.GET("/health", healthHandler.Health)
+	vGroup.GET("/health", healthHandler.Health)
 
 	userStore, err := store.NewUserStoreFactory(cfg)
 	if err != nil {
@@ -31,12 +31,12 @@ func NewServer(cfg config.Config) (*App, error) {
 	userService := service.NewUserService(userStore)
 	userHandler := handlers.NewUserHandler(userService)
 
-	v1Group.POST("/users", userHandler.CreateUser)
-	v1Group.GET("/users/:id", userHandler.GetUserByID)
-	v1Group.POST("/users/authenticate", userHandler.GetUserByEmail)
-	v1Group.PUT("/users/:id", userHandler.UpdateUserProfile)
-	v1Group.PUT("/users/:id/password", userHandler.ChangePassword)
-	v1Group.DELETE("/users/:id", userHandler.DeleteUser)
+	vGroup.POST("/users", userHandler.CreateUser)
+	vGroup.GET("/users/:id", userHandler.GetUserByID)
+	vGroup.POST("/users/authenticate", userHandler.GetUserByEmail)
+	vGroup.PUT("/users/:id", userHandler.UpdateUserProfile)
+	vGroup.PUT("/users/:id/password", userHandler.ChangePassword)
+	vGroup.DELETE("/users/:id", userHandler.DeleteUser)
 
 	return &App{
 		server:      r,
